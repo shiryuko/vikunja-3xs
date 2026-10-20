@@ -8,7 +8,7 @@
 		<template #default>
 			<div
 				class="project-week__sheet loader-container"
-				:class="{'is-loading': usersQuery.isLoading}"
+				:class="{'is-loading': isLoading}"
 			>
 				<table class="project-week__table">
 					<thead>
@@ -43,11 +43,25 @@
 								{{ user.name }}
 							</th>
 							<td
-								v-for="day in days"
-								:key="`${user.id}-${day.key}`"
+								v-for="cell in cellsFor(user.id)"
+								:key="`${user.id}-${cell.key}`"
 								class="project-week__cell"
-								:class="{'project-week__cell--today': day.isToday}"
-							/>
+								:class="{
+									'project-week__cell--today': coversToday(cell),
+									'project-week__cell--task': cell.task,
+								}"
+								:colspan="cell.colspan"
+							>
+								<button
+									v-if="cell.task"
+									type="button"
+									class="project-week__task"
+									:title="cell.task.title"
+									@click="openTask(cell.task.id)"
+								>
+									{{ cell.task.title }}
+								</button>
+							</td>
 						</tr>
 					</tbody>
 				</table>
@@ -59,13 +73,16 @@
 <script setup lang="ts">
 import {computed} from 'vue'
 import {useQuery} from '@tanstack/vue-query'
+import {useRouter} from 'vue-router'
 import {useI18n} from 'vue-i18n'
 
 import ProjectWrapper from '@/components/project/ProjectWrapper.vue'
 
 import {useAuthStore} from '@/stores/auth'
 import {useGlobalNow} from '@/composables/useGlobalNow'
+import {allTasksQuery} from '@/client/queries/tasks'
 import {weekUsersQuery} from '@/client/queries/weekUsers'
+import {weekBarCells, type WeekBarCell} from '@/helpers/project/weekTaskBars'
 import {currentWeekDates} from '@/helpers/time/calendarGrid'
 import {isSameDay} from '@/helpers/time/dateMath'
 import {formatDate} from '@/helpers/time/formatDate'
@@ -77,26 +94,61 @@ const props = defineProps<{
 }>()
 
 const {locale} = useI18n({useScope: 'global'})
+const router = useRouter()
 const authStore = useAuthStore()
 const {now} = useGlobalNow()
+
+function openTask(taskId: number) {
+	router.push({
+		name: 'task.detail',
+		params: {id: taskId},
+		state: {backdropView: router.currentRoute.value.fullPath},
+	})
+}
 
 const usersQuery = useQuery(computed(() => weekUsersQuery(
 	props.projectId,
 	props.projectId > 0,
 )))
 
+const tasksQuery = useQuery(computed(() => ({
+	...allTasksQuery({
+		project: props.projectId,
+		params: {
+			sort_by: ['start_date', 'id'],
+			order_by: ['asc', 'asc'],
+		},
+	}),
+	enabled: props.projectId > 0,
+})))
+
 const users = computed(() => usersQuery.data.value ?? [])
+const tasks = computed(() => tasksQuery.data.value ?? [])
+const isLoading = computed(() => usersQuery.isLoading.value || tasksQuery.isLoading.value)
 
 const days = computed(() => {
 	const weekStart = authStore.settings.week_start ?? 0
 
 	return currentWeekDates(now.value, weekStart).map(date => ({
+		date,
 		key: `${locale.value}-${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`,
 		label: formatDate(date, 'D MMM'),
 		title: formatDate(date, 'dddd D MMMM'),
 		isToday: isSameDay(date, now.value),
 	}))
 })
+
+const weekDates = computed(() => days.value.map(day => day.date))
+
+function cellsFor(userId: number) {
+	return weekBarCells(weekDates.value, tasks.value, userId)
+}
+
+function coversToday(cell: WeekBarCell) {
+	return days.value
+		.slice(cell.startsOn, cell.startsOn + cell.colspan)
+		.some(day => day.isToday)
+}
 </script>
 
 <style lang="scss" scoped>
@@ -160,5 +212,27 @@ const days = computed(() => {
 	&--today {
 		background: var(--grey-100);
 	}
+
+	&--task {
+		padding: .35rem;
+	}
+}
+
+.project-week__task {
+	display: block;
+	inline-size: 100%;
+	overflow: hidden;
+	padding: .25rem .6rem;
+	border: 0;
+	border-radius: $radius;
+	background: var(--primary);
+	color: var(--primary-invert);
+	font: inherit;
+	font-weight: 600;
+	line-height: 1.4;
+	text-align: start;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	cursor: pointer;
 }
 </style>

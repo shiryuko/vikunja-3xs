@@ -46,7 +46,7 @@ func RegisterUserSearchRoutes(api huma.API) {
 	Register(api, huma.Operation{
 		OperationID: "projects-users-search",
 		Summary:     "Search users with access to a project",
-		Description: "Returns the users who can access the project — through ownership, a direct share or a team — optionally filtered by a search string. Intended for share autocomplete. Requires read access to the project.",
+		Description: "Returns the users who can access the project — through ownership, a direct share or a team — optionally filtered by a search string. Intended for share autocomplete. Requires read access to the project. exclude_admins drops instance administrators (users.is_admin).",
 		Method:      http.MethodGet,
 		Path:        "/projects/{project}/users/search",
 		Tags:        []string{"sharing"},
@@ -85,8 +85,9 @@ func usersSearch(ctx context.Context, in *struct {
 }
 
 func projectUsersSearch(ctx context.Context, in *struct {
-	ProjectID int64  `path:"project"`
-	Q         string `query:"q" doc:"Search query matched against username and name."`
+	ProjectID     int64  `path:"project"`
+	Q             string `query:"q" doc:"Search query matched against username and name."`
+	ExcludeAdmins bool   `query:"exclude_admins" doc:"When true, omit users whose instance-admin flag is set."`
 }) (*userListBody, error) {
 	a, err := authFromCtx(ctx)
 	if err != nil {
@@ -114,6 +115,16 @@ func projectUsersSearch(ctx context.Context, in *struct {
 	}
 	if err := s.Commit(); err != nil {
 		return nil, translateDomainError(err)
+	}
+
+	if in.ExcludeAdmins {
+		filtered := make([]*user.User, 0, len(users))
+		for _, u := range users {
+			if u != nil && !u.IsAdmin {
+				filtered = append(filtered, u)
+			}
+		}
+		users = filtered
 	}
 
 	return &userListBody{Body: NewPaginated(users, int64(len(users)), 1, len(users))}, nil

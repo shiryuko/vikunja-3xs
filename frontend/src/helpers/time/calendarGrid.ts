@@ -1,4 +1,4 @@
-import {addDays} from '@/helpers/time/dateMath'
+import {addDays, startOfDay} from '@/helpers/time/dateMath'
 
 export interface CalendarCell {
 	date: Date
@@ -19,4 +19,12 @@ export function buildMonthGrid(year: number, month: number, weekStart: number): 
 
 export function weekdayOrder(weekStart: number): number[] {
 	return Array.from({length: 7}, (_, i) => (i + weekStart) % 7)
+}
+
+// Seven midnights, starting on weekStart (0 = Sunday), that contain `now`.
+export function currentWeekDates(now: Date, weekStart: number): Date[] {
+	const today = startOfDay(now)
+	const lead = (today.getDay() - weekStart + 7) % 7
+	const start = addDays(today, -lead)
+	return Array.from({length: 7}, (_, index) => addDays(start, index))
 }

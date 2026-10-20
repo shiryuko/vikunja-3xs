@@ -1831,7 +1831,7 @@ export const projectUsersCreate = <ThrowOnError extends boolean = true>(options:
 /**
  * Search users with access to a project
  *
- * Returns the users who can access the project — through ownership, a direct share or a team — optionally filtered by a search string. Intended for share autocomplete. Requires read access to the project.
+ * Returns the users who can access the project — through ownership, a direct share or a team — optionally filtered by a search string. Intended for share autocomplete. Requires read access to the project. exclude_admins drops instance administrators (users.is_admin).
  */
 export const projectsUsersSearch = <ThrowOnError extends boolean = true>(options: Options<ProjectsUsersSearchData, ThrowOnError>): RequestResult<ProjectsUsersSearchResponses, ProjectsUsersSearchErrors, ThrowOnError> => (options.client ?? client).get<ProjectsUsersSearchResponses, ProjectsUsersSearchErrors, ThrowOnError>({
     security: [{

@@ -7902,6 +7902,10 @@ export type ProjectsUsersSearchData = {
          * Search query matched against username and name.
          */
         q?: string;
+        /**
+         * When true, omit users whose instance-admin flag is set.
+         */
+        exclude_admins?: boolean;
     };
     url: '/projects/{project}/users/search';
 };

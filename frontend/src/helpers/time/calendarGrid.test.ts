@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest'
-import {buildMonthGrid, weekdayOrder} from './calendarGrid'
+import {buildMonthGrid, currentWeekDates, weekdayOrder} from './calendarGrid'
 
 describe('buildMonthGrid', () => {
 	it('starts the grid on the configured week start', () => {
@@ -17,6 +17,23 @@ describe('buildMonthGrid', () => {
 		const grid = buildMonthGrid(2024, 1, 1)
 		expect(grid).toHaveLength(42)
 		expect(grid.filter(c => c.inMonth)).toHaveLength(29)
+	})
+})
+
+describe('currentWeekDates', () => {
+	it('returns the Monday-start week that contains 20 Oct 2026', () => {
+		const days = currentWeekDates(new Date(2026, 9, 20, 15, 30), 1)
+
+		expect(days.map(day => day.getDate())).toEqual([19, 20, 21, 22, 23, 24, 25])
+		expect(days.every(day => day.getMonth() === 9 && day.getFullYear() === 2026)).toBe(true)
+		expect(days[0].getHours()).toBe(0)
+	})
+
+	it('shifts the same day back to Sunday when the week starts then', () => {
+		const days = currentWeekDates(new Date(2026, 9, 20), 0)
+
+		expect(days.map(day => day.getDate())).toEqual([18, 19, 20, 21, 22, 23, 24])
+		expect(days[0].getDay()).toBe(0)
 	})
 })
 

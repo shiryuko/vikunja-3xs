@@ -190,6 +190,13 @@ var FavoritesPseudoProject = Project{
 			ViewKind:  ProjectViewKindTable,
 			Position:  300,
 		},
+		{
+			ID:        -4,
+			ProjectID: FavoritesPseudoProjectID,
+			Title:     "Week",
+			ViewKind:  ProjectViewKindWeek,
+			Position:  500,
+		},
 	},
 
 	Created: time.Now(),

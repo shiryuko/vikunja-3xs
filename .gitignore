@@ -15,6 +15,9 @@ Run
 dist/
 cover.*
 /vikunja
+/vikunja.exe
+/.vikunja-run.err
+/.vikunja-run.log
 Test_*
 bin/
 secrets

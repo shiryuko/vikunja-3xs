@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest'
-import {buildMonthGrid, currentWeekDates, weekdayOrder} from './calendarGrid'
+import {buildMonthGrid, currentWeekDates, weekDates, weekdayOrder} from './calendarGrid'
 
 describe('buildMonthGrid', () => {
 	it('starts the grid on the configured week start', () => {
@@ -34,6 +34,24 @@ describe('currentWeekDates', () => {
 
 		expect(days.map(day => day.getDate())).toEqual([18, 19, 20, 21, 22, 23, 24])
 		expect(days[0].getDay()).toBe(0)
+	})
+
+	it('steps forward a whole week per offset', () => {
+		const now = new Date(2026, 9, 20, 15, 30)
+		const next = weekDates(now, 1, 1)
+
+		expect(next.map(day => [day.getFullYear(), day.getMonth(), day.getDate()])).toEqual([
+			[2026, 9, 26],
+			[2026, 9, 27],
+			[2026, 9, 28],
+			[2026, 9, 29],
+			[2026, 9, 30],
+			[2026, 9, 31],
+			[2026, 10, 1],
+		])
+		expect(weekDates(now, 1, 0).map(day => day.getDate())).toEqual(
+			currentWeekDates(now, 1).map(day => day.getDate()),
+		)
 	})
 })
 

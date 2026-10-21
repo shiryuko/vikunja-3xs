@@ -598,7 +598,9 @@
       "bucketOptions": "Bucket options"
     },
     "week": {
-      "title": "Week"
+      "title": "Week",
+      "current": "Current Week",
+      "following": "Following Weeks"
     },
     "pseudo": {
       "favorites": {

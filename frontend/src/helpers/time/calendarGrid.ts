@@ -23,8 +23,13 @@ export function weekdayOrder(weekStart: number): number[] {
 
 // Seven midnights, starting on weekStart (0 = Sunday), that contain `now`.
 export function currentWeekDates(now: Date, weekStart: number): Date[] {
+	return weekDates(now, weekStart, 0)
+}
+
+// `weekOffset` 0 is the week that contains `now`. 1 is the next week.
+export function weekDates(now: Date, weekStart: number, weekOffset = 0): Date[] {
 	const today = startOfDay(now)
 	const lead = (today.getDay() - weekStart + 7) % 7
-	const start = addDays(today, -lead)
+	const start = addDays(today, -lead + weekOffset * 7)
 	return Array.from({length: 7}, (_, index) => addDays(start, index))
 }
